@@ -28,66 +28,82 @@ func showUser(s *Server) func() {
 	return func() {
 		win := s.win.App.NewWindow("Users")
 		sp := 0
+		con := container.NewVBox()
 		for k, _ := range s.OnlineMap {
-			check := widget.NewCheck(k, func(b bool) {
+			fmt.Println(k, "is to be send the file")
+			con.Add(widget.NewCheck(k, func(b bool) {
 				if b {
 					s.sendTo[sp] = k
 					sp++
 				}
-			})
-			win.SetContent(container.NewVBox(check))
+			}))
+
 		}
+
 		s.sendP = sp
 		btnSendTo := widget.NewButton("send", send(s))
 		btnSendTo.Resize(fyne.NewSize(60, 40))
 		btnFlush := widget.NewButton("flush", func() {
-			go a(s)
 			win.Close()
+			go s.showUsers()
+			return
 		})
 
 		win.Resize(fyne.NewSize(800, 600))
-		win.SetContent(container.NewVBox(btnSendTo, btnFlush))
-
+		con.Add(btnSendTo)
+		con.Add(btnFlush)
+		win.SetContent(con)
 		win.Show()
 	}
 
 }
 
-func a(s *Server) {
+func (s *Server) showUsers() {
 	win := s.win.App.NewWindow("Users")
-	sp := 0
+	con := container.NewVBox()
+	s.sendP = 0
 	for k, _ := range s.OnlineMap {
-		check := widget.NewCheck(k, func(b bool) {
+		chk := widget.NewCheck(k, nil)
+		chk.OnChanged = func(b bool) {
 			if b {
-				s.sendTo[sp] = k
-				sp++
+				s.sendTo[s.sendP] = k
+				s.sendP++
+				fmt.Println(k, "is to be send the file")
 			}
-		})
-		fmt.Println(k)
-		win.SetContent(container.NewVBox(check))
+		}
+		con.Add(chk)
+
 	}
-	s.sendP = sp
+
 	btnSendTo := widget.NewButton("send", send(s))
 	btnSendTo.Resize(fyne.NewSize(60, 40))
 	btnFlush := widget.NewButton("flush", func() {
-		go showUser(s)
 		win.Close()
+		go s.showUsers()
+		return
 	})
 
 	win.Resize(fyne.NewSize(800, 600))
-	win.SetContent(container.NewVBox(btnSendTo, btnFlush))
-
+	con.Add(btnSendTo)
+	con.Add(btnFlush)
+	win.SetContent(con)
 	win.Show()
 }
 
 func send(s *Server) func() {
 	return func() {
 
-		for i := 0; i < len(s.sendTo); i++ {
-			fmt.Println(s.sendTo[i])
+		if s.sendP == 0 {
+			dialog.ShowInformation("warning", "please select users", s.win.Win)
+		}
+
+		for i := 0; i < s.sendP; i++ {
 			value, ok := s.OnlineMap[s.sendTo[i]]
 			if ok {
 				go sendFile(value, s.file, s)
+			} else {
+				msg := s.sendTo[i] + "doesn't online"
+				dialog.ShowInformation("warning", msg, s.win.Win)
 			}
 
 		}

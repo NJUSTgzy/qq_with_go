@@ -66,7 +66,6 @@ func (s *Server) Handle(conn net.Conn) {
 	fmt.Println(conn.RemoteAddr().String(), " online...")
 	s.UserLock.Lock()
 	s.OnlineMap[conn.RemoteAddr().String()] = User
-	s.sendTo[s.nowPeople] = conn.RemoteAddr().String()
 	s.nowPeople++
 	s.UserLock.Unlock()
 

@@ -13,10 +13,11 @@ type user struct {
 func NewUser(conn net.Conn) *user {
 	addr := conn.RemoteAddr().String()
 	cl := &user{
-		name: addr,
-		Addr: addr,
-		conn: conn,
-		c:    make(chan string),
+		name:     addr,
+		Addr:     addr,
+		conn:     conn,
+		fileList: make(map[string]int),
+		c:        make(chan string),
 	}
 
 	return cl

@@ -26,6 +26,7 @@ type Server struct {
 	file      string
 	btnSend   *widget.Button
 	sendTo    []string
+	sendP     int
 	nowPeople int
 	UserLock  sync.RWMutex
 	win       *WinConfig
@@ -39,6 +40,7 @@ func Init(con, Ip, Port string) *Server {
 		isStart:   false,
 		OnlineMap: make(map[string]*user),
 		nowPeople: 0,
+		sendP:     0,
 		sendTo:    make([]string, 16),
 
 		win: &WinConfig{

@@ -14,7 +14,7 @@ func makeClientUI(win fyne.Window, c *Client) {
 	WayEntry := widget.NewEntry()
 	IPEntry := widget.NewEntry()
 	PortEntry := widget.NewEntry()
-	fileName := "/home/njustgzy/Desktop/first2.md"
+	fileName := "/home/njustgzy/Desktop/cup.jpg"
 	btnRecv := widget.NewButton("recvFile", recv(c, fileName))
 
 	AddrForm := &widget.Form{
@@ -37,6 +37,7 @@ func makeClientUI(win fyne.Window, c *Client) {
 	container := fyne.NewContainerWithLayout(layout.NewVBoxLayout(), AddrForm, btnRecv)
 
 	win.SetContent(container)
+	win.Resize(fyne.NewSize(800, 600))
 
 }
 

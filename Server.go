@@ -5,7 +5,10 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/widget"
 	"net"
+	"strconv"
+	"sync"
 )
 
 type WinConfig struct {
@@ -14,19 +17,30 @@ type WinConfig struct {
 }
 
 type Server struct {
-	ConnType string
-	Ip       string
-	Port     string
-	isStart  bool
-	win      *WinConfig
+	ConnType  string
+	Ip        string
+	Port      string
+	isStart   bool
+	OnlineMap map[string]*user
+	Message   string
+	file      string
+	btnSend   *widget.Button
+	sendTo    []string
+	nowPeople int
+	UserLock  sync.RWMutex
+	win       *WinConfig
 }
 
 func Init(con, Ip, Port string) *Server {
 	server := &Server{
-		ConnType: con,
-		Ip:       Ip,
-		Port:     Port,
-		isStart:  false,
+		ConnType:  con,
+		Ip:        Ip,
+		Port:      Port,
+		isStart:   false,
+		OnlineMap: make(map[string]*user),
+		nowPeople: 0,
+		sendTo:    make([]string, 16),
+
 		win: &WinConfig{
 			App: app.New(),
 		},
@@ -46,6 +60,37 @@ func (s *Server) Start() {
 }
 
 func (s *Server) Handle(conn net.Conn) {
+	User := NewUser(conn)
+	fmt.Println(conn.RemoteAddr().String(), " online...")
+	s.UserLock.Lock()
+	s.OnlineMap[conn.RemoteAddr().String()] = User
+	s.sendTo[s.nowPeople] = conn.RemoteAddr().String()
+	s.nowPeople++
+	s.UserLock.Unlock()
+
+}
+
+func (s *Server) boardCast() {
+
+	port, _ := strconv.Atoi(s.Port)
+	laddr := net.UDPAddr{
+		IP:   net.IP(s.Ip),
+		Port: port,
+	}
+
+	raddr := net.UDPAddr{
+		IP:   net.IPv4(255, 255, 255, 255),
+		Port: 3000,
+	}
+
+	conn, err := net.DialUDP("udp", &laddr, &raddr)
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
+	conn.Write([]byte(s.Message))
+	conn.Close()
 
 }
 

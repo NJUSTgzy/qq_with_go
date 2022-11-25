@@ -7,26 +7,27 @@ import (
 	"os"
 )
 
-func sendFile(conn net.Conn, fileName string, size int64) {
-	file, err := os.Open(fileName)
-	size, _ = file.Seek(0, os.SEEK_END)
-	defer file.Close()
+func sendFile(conn net.Conn, fileName string, s *Server) {
+	fmt.Println(conn.RemoteAddr().String(), " is recving")
+	ofile, err := os.Open(fileName)
+	fileSize, _ := ofile.Seek(0, os.SEEK_END)
+	ofile.Seek(0, os.SEEK_SET)
+	fmt.Println(fileSize)
+	defer ofile.Close()
 
 	if err != nil {
-		fmt.Println("failed to open the file :%s ,error %v", fileName, err)
+		fmt.Println("failed to open the file : ", fileName, err)
 		return
 	}
 
 	buf := make([]byte, 4096)
-
 	for {
-		n, err := file.Read(buf)
-
+		n, err := ofile.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("Read success")
+				fmt.Println("send success")
 			} else {
-				fmt.Println("file read err: %v", err)
+				fmt.Println("file read err: ", err)
 			}
 			return
 		}
@@ -41,24 +42,29 @@ func recvFile(conn net.Conn, fileName string) {
 	file, err := os.Create(fileName)
 	defer file.Close()
 	if err != nil {
-		fmt.Println("file create err: %v ", err)
+		fmt.Println("file create err: ", err)
 		return
 	}
 
 	buf := make([]byte, 4096)
 	for {
-		n, err := conn.Read(buf)
 
+		n, err := conn.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("%s accept success", fileName)
+				fmt.Println(fileName, "accept success")
 			} else {
-				fmt.Println("recv error: %v", err)
+				fmt.Println("recv error: ", err)
 			}
 			return
 		}
 
-		file.Write(buf[:n])
+		_, err = file.Write(buf[:n])
+
+		if err != nil {
+
+			return
+		}
 
 	}
 

@@ -3,13 +3,14 @@ package main
 import "net"
 
 type user struct {
-	name string
-	c    chan string
-	Addr string
-	conn net.Conn
+	name     string
+	c        chan string
+	Addr     string
+	fileList map[string]int
+	conn     net.Conn
 }
 
-func NewClient(conn net.Conn) *user {
+func NewUser(conn net.Conn) *user {
 	addr := conn.RemoteAddr().String()
 	cl := &user{
 		name: addr,

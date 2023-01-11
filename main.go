@@ -9,7 +9,7 @@ func main() {
 
 	fmt.Println(os.Args[1])
 
-	if os.Args == nil || os.Args[1] == "client" || os.Args[1] == "" {
+	if true {
 		client := cInit()
 		client.cStart()
 	} else {

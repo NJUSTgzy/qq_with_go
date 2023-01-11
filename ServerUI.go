@@ -7,6 +7,9 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 func makeServer(win fyne.Window, s *Server) {
@@ -143,4 +146,70 @@ func chose(s *Server, win fyne.Window) func() {
 		}, win)
 		dia.Show()
 	}
+}
+
+func dirTree(w fyne.Window) {
+	msg := widget.NewLabel("")
+	tree := widget.NewTree(nil, nil, nil, nil)
+	tree.OnSelected = func(uid widget.TreeNodeID) {
+		msg.SetText(uid)
+	}
+	root := "."
+	tree.Root = root
+	btn := widget.NewButton("Browse tree", func() {
+		tree.ChildUIDs = func(uid widget.TreeNodeID) (c []widget.TreeNodeID) {
+			if uid == "" {
+				c = getFileList(root)
+			} else {
+				c = getFileList(uid)
+			}
+			return
+		}
+
+		tree.CreateNode = func(branch bool) (o fyne.CanvasObject) {
+			return widget.NewLabel("")
+		}
+
+		tree.UpdateNode = func(uid widget.TreeNodeID, branch bool, node fyne.CanvasObject) {
+			lb := node.(*widget.Label)
+			stat, err := os.Stat(uid)
+			if err != nil {
+				lb.SetText("")
+			}
+
+			lb.SetText(stat.Name())
+		}
+
+		tree.IsBranch = func(uid widget.TreeNodeID) (ok bool) {
+			return isDir(uid)
+		}
+		tree.Refresh()
+
+	})
+	top := container.NewVBox(msg, btn)
+	c := container.NewBorder(top, nil, nil, nil, tree)
+
+	w.SetContent(c)
+}
+
+func isDir(pth string) bool {
+	file, err := os.Stat(pth)
+	if err != nil {
+		return false
+	} else {
+		return file.IsDir()
+	}
+}
+
+func getFileList(Path string) (lst []string) {
+	dir, err := ioutil.ReadDir(Path)
+	if err != nil {
+		return nil
+	}
+	for _, file := range dir {
+		path1 := Path + string(filepath.Separator) + file.Name()
+		lst = append(lst, path1)
+	}
+
+	return
 }
